@@ -63,7 +63,7 @@ class HandleRequests(BaseHTTPRequestHandler):
             else:
                 response = get_all_orders()
 
-        self.wfile.write(json.dumps(response).encode())
+        self.wfile.write(f"{response}".encode())
 
     def do_POST(self):
         self._set_headers(201)
@@ -134,7 +134,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.wfile.write("".encode())
 
     def do_PUT(self):
-        self._set_headers(204)
+        # self._set_headers(204)
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
@@ -142,18 +142,25 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
+        success = False
+
         # Delete a single animal from the list
+        if resource == "orders":
+            success = update_order(id, post_body)
+
         if resource == "metals":
             update_metal(id, post_body)
-            
-        if resource == "orders":
-            update_order(id, post_body)
-            
-        if resource == "sizes":
-            update_size(id, post_body)
-            
+
         if resource == "styles":
             update_style(id, post_body)
+
+        if resource == "sizes":
+            update_size(id, post_body)
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
 
         # Encode the new animal and send in response
         self.wfile.write("".encode())
